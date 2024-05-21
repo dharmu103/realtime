@@ -32,7 +32,20 @@ function getMinutes() {
     var minute = now.getMinutes();
     return minute;
 }
-function create_event(message, events,symbol) {
+// function create_event(event) {
+//     console.log(event)
+//     // Check if event is an array
+//     if (Array.isArray(event)) {
+//         // Process each event in the array
+//         return event.map(singleEvent => processSingleEvent(singleEvent));
+//     } else {
+//         // Process single event
+//         return processSingleEvent(event);
+//     }
+// }
+
+function create_event( event) {
+    //console.log(event)
     const dateTime = new Date().getTime();
     // console.log(getClockTime(dateTime))
     // 1 hour event
@@ -93,46 +106,58 @@ function create_event(message, events,symbol) {
                 : end_time.getHours() + ":" + end_time.getMinutes() + ampm;
 
         var event_id = getClockTime();
-        var clock_created_time = event_id;
-        var create_price = message.data.p;
-        var start_price = message.data.p;
-        var diff_price = start_price - create_price;
+        // var clock_created_time = event_id;
+        // var create_price = message.data.p;
+        // var start_price = message.data.p;
+        // var diff_price = start_price - create_price;
 
-        if (events.find((e) => e.event_id === event_id)) {
+        if (event.event_id === event_id) {
             // console.log("Event already exists")
             return false;
         }
-
-        var obj = {
-            event_id: event_id,
-            start_price: message.data.p,
-            title: `${symbol.toUpperCase()} to be priced at ${message.data.p} USDT or more at ${clock_end_time} ?`,
-            subtitle: `${symbol.toUpperCase()} open price at ${event_id} was${start_price}USDT.`,
-            event_type: `${symbol.toUpperCase()}`,
+        return {
+            ...event,
             is_event_active: false,
-            yes_price: 5,
-            no_price: 5,
-            created_time: created_time,
-            start_time_miliseconds: start_time_miliseconds,
-            end_time_miliseconds: end_time_miliseconds,
+            created_time,
+            start_time_miliseconds,
+            end_time_miliseconds,
             start_time: istStartTime,
             end_time: istEndTime,
             current_diff_price: null,
             diff_price: null,
         };
-        // console.log("created event")
-         //console.log(obj);
-        return obj;
+
+        // var obj = {
+        //     event_id: event_id,
+        //     start_price: message.data.p,
+        //     title: `${symbol.toUpperCase()} to be priced at ${message.data.p} USDT or more at ${clock_end_time} ?`,
+        //     subtitle: `${symbol.toUpperCase()} open price at ${event_id} was${start_price}USDT.`,
+        //     event_type: `${symbol.toUpperCase()}`,
+        //     is_event_active: false,
+        //     yes_price: 5,
+        //     no_price: 5,
+        //     created_time: created_time,
+        //     start_time_miliseconds: start_time_miliseconds,
+        //     end_time_miliseconds: end_time_miliseconds,
+        //     start_time: istStartTime,
+        //     end_time: istEndTime,
+        //     current_diff_price: null,
+        //     diff_price: null,
+        // };
+        // // console.log("created event")
+        //  //console.log(obj);
+        // return obj;
     } else {
         // console.log(" creating event failed");
     }
 }
 
 function update_event(message, events) {
+    console.log("update event is hitted")
     const dateTime = new Date().getTime();
     // console.log(" update event")
     // console.log("dateTime", dateTime);
-
+   // console.log(message);
     events.map((element) => {
         element.current_diff_price = element.start_price - message.data.p;
         if (element.is_event_active === false) {
@@ -150,7 +175,7 @@ function update_event(message, events) {
                 if (element.diff_price === null) {
                     element.diff_price = element.start_price - message.data.p;
                 }
-                console.log(" event_active");
+                console.log("cricket  event_active");
             }
         }
         if (element.is_event_active === true) {
