@@ -2,7 +2,7 @@ const app = require('express')();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const axios = require('axios');
-
+require('dotenv').config()
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const {create_event,update_event} = require("./cricket");
@@ -19,7 +19,8 @@ let events=[];
 let youtubeEvent=[];
 // io.start()
 var timeout = 1000;
-const apiKey="AIzaSyDR6Cf5Tb2_EmXQCrLwaYowpvbG0c_bDZM";
+const apiKey=process.env.API_KEY;
+console.log(apiKey);
 //const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&forUsername=${channelName}&key=${apiKey}`;
 const emit = () => {
     // console.log(' emitting data');
