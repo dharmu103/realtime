@@ -14,7 +14,7 @@ const runWebSocket = (symbol, events) => {
     const ws = new WebSocket(
         `${wsUrl}/stream?streams=${symbol}@aggTrade/${symbol}@markPrice`
     );
-    console.log(ws)
+    //console.log(ws)
 
     ws.on("open", function open() {
         console.log(`Connected to WebSocket for ${symbol}`);

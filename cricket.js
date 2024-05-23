@@ -50,11 +50,11 @@ function create_event( event) {
     // console.log(getClockTime(dateTime))
     // 1 hour event
     if (
-        getMinutes() % 5 === 0 ||
-        getMinutes() % 60 === 0 ||
-        getMinutes() % 20 === 0 ||
-        getMinutes() % 10 === 0||
-        getMinutes() % 2=== 0
+        // getMinutes() % 5 === 0 ||
+        // getMinutes() % 60 === 0 ||
+        // getMinutes() % 20 === 0 ||
+        // getMinutes() % 10 === 0||
+         getMinutes() % 1=== 0
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -68,6 +68,8 @@ function create_event( event) {
         }
         else if (getMinutes() % 2 === 0) {
             event_duration = 2;
+        }else{
+            event_duration = 1;
         }
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
