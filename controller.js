@@ -32,7 +32,7 @@ function getMinutes() {
     var minute = now.getMinutes();
     return minute;
 }
-function create_event(message, events) {
+function create_event(message, events,symbol) {
     const dateTime = new Date().getTime();
     // console.log(getClockTime(dateTime))
     // 1 hour event
@@ -40,7 +40,8 @@ function create_event(message, events) {
         getMinutes() % 5 === 0 ||
         getMinutes() % 60 === 0 ||
         getMinutes() % 20 === 0 ||
-        getMinutes() % 10 === 0
+        getMinutes() % 10 === 0||
+        getMinutes() % 2=== 0
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -52,6 +53,13 @@ function create_event(message, events) {
         } else if (getMinutes() % 5 === 0) {
             event_duration = 5;
         }
+        else if (getMinutes() % 2 === 0) {
+            event_duration = 2;
+        }
+        // var istOptions = { timeZone: 'Asia/Kolkata' };
+        // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
+        // var istEndTime = end_time.toLocaleString('en-IN', istOptions);
+        
 
         var ampm = "AM";
         var currentDateObj = new Date();
@@ -62,6 +70,9 @@ function create_event(message, events) {
         var end_time_miliseconds = numberOfMlSeconds + addMlSeconds * 2;
         var start_time = new Date(numberOfMlSeconds + addMlSeconds);
         var end_time = new Date(numberOfMlSeconds + addMlSeconds * 2);
+        var istOptions = { timeZone: 'Asia/Kolkata' };
+        var istStartTime = start_time.toLocaleString('en-IN', istOptions);
+        var istEndTime = end_time.toLocaleString('en-IN', istOptions);
         if (start_time.getHours() < 12) {
             ampm = "AM";
         } else {
@@ -95,22 +106,22 @@ function create_event(message, events) {
         var obj = {
             event_id: event_id,
             start_price: message.data.p,
-            title: `Bitcoin to be priced at ${message.data.p} USDT or more at ${clock_end_time} ?`,
-            subtitle: `Bitcoin open price at ${event_id} was${start_price}USDT.`,
-            event_type: "BTCUSDT",
+            title: `${symbol.toUpperCase()} to be priced at ${message.data.p} USDT or more at ${clock_end_time} ?`,
+            subtitle: `${symbol.toUpperCase()} open price at ${event_id} was${start_price}USDT.`,
+            event_type: `${symbol.toUpperCase()}`,
             is_event_active: false,
             yes_price: 5,
             no_price: 5,
             created_time: created_time,
             start_time_miliseconds: start_time_miliseconds,
             end_time_miliseconds: end_time_miliseconds,
-            start_time: start_time,
-            end_time: end_time,
+            start_time: istStartTime,
+            end_time: istEndTime,
             current_diff_price: null,
             diff_price: null,
         };
         // console.log("created event")
-        // console.log(obj);
+         //console.log(obj);
         return obj;
     } else {
         // console.log(" creating event failed");
