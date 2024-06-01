@@ -3,6 +3,7 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 const axios = require('axios');
 require('dotenv').config()
+const saveFinishedEvent= require("./result");
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 const {create_event,update_event} = require("./cricket");
@@ -25,11 +26,14 @@ console.log(apiKey);
 const emit = () => {
     // console.log(' emitting data');
     // console.log(global.oddsData);
+    const allEvents = [
+        ...global.btcOddsData,
+        ...global.ethOddsData,
+        ...global.cricketOddsData,
+        ...global.globalYouTubeData
+    ];
     io.emit('broadcast', {
-        btcEvents: global.btcOddsData,
-        ethEvents: global.ethOddsData,
-        cricketEvents: global.cricketOddsData,
-        youtubeEvent:global.globalYouTubeData
+        events: allEvents
     });
 
 
@@ -51,7 +55,7 @@ async function fetchYouTubeChannelDetails(channelName) {
         }
     }catch(err){
         console.log(err);
-        res.status(400).json({error:"Something went wrong"})
+        return "something wnet wrong"
     }
    
 
@@ -63,7 +67,7 @@ async function fetchYouTubeChannelDetails(channelName) {
 app.post('/api/events', (req, res) => {
     const newEvent = req.body;
    
-    if (!newEvent.event_type || !newEvent.event_id || !newEvent.yes_price || !newEvent.title) {
+    if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title) {
         return res.status(400).json({ error: 'Invalid event object' });
     }
 
@@ -72,17 +76,62 @@ app.post('/api/events', (req, res) => {
         if (processedEvent) {
             //console.log("process event"+processedEvent)
             events.push(processedEvent);
+            
         }
         console.log(events)
       
         // events.push(newEvent)
         // const processedEvent = create_event(newEvent);
         global.cricketOddsData.push(processedEvent);
+        res.status(201).json(processedEvent);
     } else {
         return res.status(400).json({ error: 'Unknown event type' });
     }
 
-    res.status(201).json(newEvent);
+    //res.status(201).send("nothing happened")
+});
+
+//update cricket event
+app.put('/api/events', (req, res) => {
+    const eventId = req.query.event_id;
+    const updatedData = req.body;
+
+    if (!eventId) {
+        return res.status(400).json({ error: 'Event ID is required' });
+    }
+
+    const event = global.cricketOddsData.find(e => e.event_id === eventId);
+
+    if (!event) {
+        return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const currentTime = new Date().getTime();
+
+    if (currentTime < event.start_time_miliseconds) {
+        
+        return res.status(400).json({ error: 'Cannot update event outside of active period' });
+    }
+    else if(currentTime > event.start_time_miliseconds){
+        if(event.is_event_active=true){
+            console.log("executed")
+            event.is_event_active=false;
+            let result;
+            if(updatedData.score>event.score){
+                result='yes';
+            }else{
+                result='no';
+            }
+            saveFinishedEvent(event, result);
+        }
+    }
+
+    // Update the event with the new yes_price and no_price
+    if (updatedData.yes_price) event.yes_price = updatedData.yes_price;
+    if (updatedData.no_price) event.no_price = updatedData.no_price;
+    if (updatedData.score) event.score = updatedData.score;
+    event.is_event_active=true;
+    res.status(200).json(event);
 });
 
 //youtube api
@@ -116,16 +165,15 @@ const message={
 }
 
 setInterval(() => {
-   // console.log(global.globalYouTubeData)
+   
     if (Array.isArray(global.cricketOddsData) && global.cricketOddsData.length > 0) {
-        //console.log("Cricket odds data:", global.cricketOddsData);
-        // Perform other actions or call functions here
-        var updated_events = update_event(message, events);
-        if(updated_events){
-         events = updated_events;
-         global.cricketOddsData.push(events);
-         console.log("global value updTated")
-        }
+        
+        // var updated_events = update_event(message, events);
+        // if(updated_events){
+        //  events = updated_events;
+        //  global.cricketOddsData.push(events);
+        //  console.log("global value updTated")
+        // }
        
     } else {
         //console.log("Cricket odds data is empty.");
@@ -133,13 +181,11 @@ setInterval(() => {
 }, 1000);
 
 setInterval(async() => {
-    // if (Array.isArray(global.cricketOddsData) && global.cricketOddsData.length > 0) {
-
-    // }
+   
     if (globalYouTubeData.length > 0) {
      var update_youtube= await  updateYouTubeEvent(globalYouTubeData);
         console.log("YouTube events updated:", update_youtube);
     } else {
         console.log("No YouTube events to update.");
     }
-}, 10000); //5 minutes
+}, 10000); 

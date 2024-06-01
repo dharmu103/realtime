@@ -1,3 +1,6 @@
+const FinishedEvent= require("./models/result");
+const mongoose = require('mongoose');
+const saveFinishedEvent= require("./result");
 function getClockTime() {
     var now = new Date();
 
@@ -40,8 +43,7 @@ function create_event(message, events,symbol) {
         getMinutes() % 5 === 0 ||
         getMinutes() % 60 === 0 ||
         getMinutes() % 20 === 0 ||
-        getMinutes() % 10 === 0||
-        getMinutes() % 2=== 0
+        getMinutes() % 10 === 0
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -53,9 +55,9 @@ function create_event(message, events,symbol) {
         } else if (getMinutes() % 5 === 0) {
             event_duration = 5;
         }
-        else if (getMinutes() % 2 === 0) {
-            event_duration = 2;
-        }
+        // else if (getMinutes() % 2 === 0) {
+        //     event_duration = 2;
+        // }
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
         // var istEndTime = end_time.toLocaleString('en-IN', istOptions);
@@ -127,59 +129,54 @@ function create_event(message, events,symbol) {
         // console.log(" creating event failed");
     }
 }
-
-function update_event(message, events) {
+ function update_event(message, events) {
     const dateTime = new Date().getTime();
-    // console.log(" update event")
-    // console.log("dateTime", dateTime);
 
-    events.map((element) => {
+    if (!Array.isArray(events)) {
+        throw new Error("events should be an array");
+    }
+
+    for (let element of events) {
         element.current_diff_price = element.start_price - message.data.p;
-        if (element.is_event_active === false) {
-            if (
-                element.end_time_miliseconds < dateTime &&
-                element.start_time_miliseconds > dateTime
-            ) {
-                element.is_event_active = false;
-            }
-            if (
-                element.end_time_miliseconds > dateTime &&
-                element.start_time_miliseconds < dateTime
-            ) {
+
+        if (!element.is_event_active) {
+            if (element.end_time_miliseconds > dateTime && element.start_time_miliseconds < dateTime) {
                 element.is_event_active = true;
                 if (element.diff_price === null) {
                     element.diff_price = element.start_price - message.data.p;
                 }
-                console.log(" event_active");
+                console.log("event_active");
             }
         }
-        if (element.is_event_active === true) {
+
+        if (element.is_event_active) {
             var rate_change_for_1 = element.diff_price / 50;
-            var rate_change =
-                (element.current_diff_price - element.diff_price) /
-                (rate_change_for_1 * 10);
+            var rate_change = (element.current_diff_price - element.diff_price) / (rate_change_for_1 * 10);
             if (element.current_diff_price - element.diff_price > 0) {
-                rate_change = rate_change * -1;
+                rate_change *= -1;
             }
             element.yes_price = parseFloat(5 - rate_change).toFixed(2);
             element.no_price = parseFloat(5 + rate_change).toFixed(2);
-            // console.log(
-            //     " range_active",
-            //     element.current_diff_price,
-            //     element.yes_price,
-            //     element.no_price,
-            //     rate_change,
-            //     rate_change_for_1
-            // );
-        }
-        if(dateTime > element.end_time_miliseconds){
-            element.is_event_active = true;
         }
 
-        return events;
-    });
+        if (dateTime > element.end_time_miliseconds) {
+            
+            if( element.is_event_active ===true){
+                element.is_event_active = false;
+                let result;
+                if(element.start_price<message.data.p){
+                    result='yes';
+                }else{
+                    result='no';
+                }
+    
+                saveFinishedEvent(element, result);
+            }
+           
+            //console.log(`Event ${element.event_id} saved to the database.`);
+        }
+    }
 }
-
 module.exports = { create_event, update_event };
 
 // Event.aggregate([

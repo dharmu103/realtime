@@ -1,3 +1,5 @@
+
+const saveFinishedEvent= require("./result");
 function getClockTime() {
     var now = new Date();
 
@@ -44,17 +46,18 @@ async function createYouTubeEvent(channelDetails,eventid) {
         ) {
             var event_duration;
             if (getMinutes() % 60 === 0) {
-                event_duration = 24*60;
+                event_duration = 60;
             } else if (getMinutes() % 20 === 0) {
-                event_duration = 24*3*20;
+                event_duration = 20;
             } else if (getMinutes() % 10 === 0) {
                 event_duration = 24*6*10;
             } else if (getMinutes() % 5 === 0) {
-                event_duration = 24*6*5;
+                event_duration = 5;
             }
-            else if (getMinutes() % 2 === 0) {
-                event_duration = 2;
-            }else{
+            // else if (getMinutes() % 2 === 0) {
+            //     event_duration = 2;
+            // }
+            else{
                 event_duration = 5;
             }
             // var istOptions = { timeZone: 'Asia/Kolkata' };
@@ -104,10 +107,11 @@ async function createYouTubeEvent(channelDetails,eventid) {
                 return false;
             }
             return {event_type: 'YOUTUBE',
-            event_id: channelDetails.id,
+            event_id: event_id,
             title: `Subscriber Count for ${channelDetails.snippet.title}`,
             yes_price: 5,
             no_price: 5,
+            start_count:channelDetails.statistics.subscriberCount,
             subscriber_count: channelDetails.statistics.subscriberCount,
                 is_event_active: false,
                 created_time,
@@ -154,16 +158,26 @@ async function  updateYouTubeEvent(event) {
     // }
    
         if (event.is_event_active && dateTime > event.end_time_miliseconds) {
-            event.is_event_active = false;
-            console.log("event is ended");
+            if( event.is_event_active ===true){
+                event.is_event_active = false;
+                let result;
+                if(event.start_count<event.subscriber_count){
+                    result='yes';
+                }else{
+                    result='no';
+                }
+    
+                saveFinishedEvent(element, result);
+            }
         }
-        if (!event.is_event_active && dateTime >= event.start_time_miliseconds && dateTime <= event.end_time_miliseconds) {
+        if ( dateTime >= event.start_time_miliseconds && dateTime <= event.end_time_miliseconds) {
             event.is_event_active = true;
             console.log("youtube event hitted")
             const updatedChannelDetails = await fetchYouTubeChannelDetails(event.channelName);
             event.current_diff_price = updatedChannelDetails.statistics.subscriberCount - event.subscriber_count;
             event.yes_price = parseFloat(5 - (event.current_diff_price / 1000)).toFixed(2);
             event.no_price = parseFloat(5 + (event.current_diff_price / 1000)).toFixed(2);
+            event.subscriber_count=updatedChannelDetails.statistics.subscriberCount;
         }
         else{
             console.log("youtube event not started yet")
