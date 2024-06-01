@@ -121,6 +121,7 @@ function create_event( event) {
         var event_id = getClockTime();
         return {
             ...event,
+            start_price:0,
             event_id: event_id,
             is_event_active: false,
             created_time,
@@ -131,7 +132,21 @@ function create_event( event) {
             current_diff_price: null,
             diff_price: null,
         };
-
+        // event_id: event_id,
+        // start_price: message.data.p,
+        // title: `${symbol.toUpperCase()} to be priced at ${message.data.p} USDT or more at ${clock_end_time} ?`,
+        // subtitle: `${symbol.toUpperCase()} open price at ${event_id} was${start_price}USDT.`,
+        // event_type: `${symbol.toUpperCase()}`,
+        // is_event_active: false,
+        // yes_price: 5,
+        // no_price: 5,
+        // created_time: created_time,
+        // start_time_miliseconds: start_time_miliseconds,
+        // end_time_miliseconds: end_time_miliseconds,
+        // start_time: istStartTime,
+        // end_time: istEndTime,
+        // current_diff_price: null,
+        // diff_price: null,
         // var obj = {
         //     event_id: event_id,
         //     start_price: message.data.p,
