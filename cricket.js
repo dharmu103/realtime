@@ -66,10 +66,11 @@ function create_event( event) {
         } else if (getMinutes() % 5 === 0) {
             event_duration = 5;
         }
-        else if (getMinutes() % 2 === 0) {
-            event_duration = 2;
-        }else{
-            event_duration = 1;
+        // else if (getMinutes() % 2 === 0) {
+        //     event_duration = 2;
+        // }
+        else{
+            event_duration = 5;
         }
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
