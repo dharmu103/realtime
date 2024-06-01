@@ -1,5 +1,8 @@
 const api = require('./api');
 const emitter = require('./emitter');
+require('dotenv/config');
+const mongoose = require('./database');
+mongoose.Promise = global.Promise;
 
 global.oddsData = {};
 console.log("Starting the application...")

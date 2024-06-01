@@ -50,11 +50,11 @@ function create_event( event) {
     // console.log(getClockTime(dateTime))
     // 1 hour event
     if (
-        // getMinutes() % 5 === 0 ||
-        // getMinutes() % 60 === 0 ||
-        // getMinutes() % 20 === 0 ||
-        // getMinutes() % 10 === 0||
-         getMinutes() % 1=== 0
+        getMinutes() % 5 === 0 ||
+        getMinutes() % 60 === 0 ||
+        getMinutes() % 20 === 0 ||
+        getMinutes() % 10 === 0||
+         getMinutes() % 2=== 0
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -117,8 +117,10 @@ function create_event( event) {
             // console.log("Event already exists")
             return false;
         }
+        var event_id = getClockTime();
         return {
             ...event,
+            event_id: event_id,
             is_event_active: false,
             created_time,
             start_time_miliseconds,
