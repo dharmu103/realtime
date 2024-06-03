@@ -2,7 +2,9 @@
 const saveFinishedEvent= require("./result");
 function getClockTime() {
     var now = new Date();
-
+    var day = now.getDate();
+    var month = now.getMonth() + 1; // Months are zero-based
+    var year = now.getFullYear();
     var hour = now.getHours();
     var minute = now.getMinutes();
     var second = now.getSeconds();
@@ -25,8 +27,11 @@ function getClockTime() {
     if (second < 10) {
         second = "0" + second;
     }
+    var dateString = `${day}/${month}/${year}`;
     var timeString = hour + ":" + minute + ap;
-    return timeString;
+    var dateTimeString = dateString + " " + timeString;
+    return dateTimeString;
+    //return timeString;
 }
 
 function getMinutes() {
