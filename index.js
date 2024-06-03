@@ -9,6 +9,7 @@ console.log("Starting the application...")
 api.received();
 emitter.emit();
 
+
 // const WebSocket = require("ws");
 // const wsUrl = "wss://fstream.binance.com";
 // const symbol = "btcusdt";
