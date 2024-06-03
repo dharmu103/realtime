@@ -6,8 +6,14 @@ require('dotenv').config()
 const saveFinishedEvent= require("./result");
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
+const FinishedEvent= require("./models/result")
 const {create_event,update_event} = require("./cricket");
 const { createYouTubeEvent, updateYouTubeEvent ,getClockTime} = require("./youtube");
+const path = require('path');
+const UserTrades=require(path.join(__dirname, '../../accounts/accounts/model/user_trades.js'));
+const { MongoClient } = require('mongodb');
+require('dotenv/config');
+//const UserTrades= require("")
 io.on('connection', () => {
     console.log('a user connected');
  });
@@ -189,4 +195,123 @@ setInterval(async() => {
     } else {
         console.log("No YouTube events to update.");
     }
-}, 10000); 
+}, 10000);
+
+
+async function checkAndProcessEvents() {
+  const uri = 'mongodb+srv://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + "@" + process.env.MONGODB_CLUSTER + '/' + process.env.MONGODB_DBNAME + '?retryWrites=true&w=majority';
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    try {
+      const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
+      if (event) {
+
+        console.log(event);
+  
+ 
+        const userTrades = await accessCollection(event.event_id,event.event_type);
+        if (userTrades.length > 0) {
+          console.log(`Found ${userTrades.length} user trades for event ${event.event_id}`);
+  
+          await client.connect();
+          const database = client.db('cluster');
+          const collection = database.collection('usertrades');
+          setTimeout(async () => {
+      
+            for (const trade of userTrades) {
+                if(event.result.toUpperCase()==trade.bet_type.toUpperCase()){
+                    console.log(`Processing trade ${trade._id}`);
+                    trade.amount+=trade.investment;
+                }
+                 trade.status="SUCCESS";
+                 try {
+                  await collection.updateOne({ _id: trade._id }, { $set: trade });
+                  console.log(`Trade ${trade._id} updated in the database`);
+              } catch (err) {
+                  console.error(`Error updating trade ${trade._id}:`, err);
+              }
+            
+            }
+  
+           
+            event.isMoneyTransferred = true;
+            try {
+              //await userTrades.save();
+              await event.save();
+              console.log(`Event ${event.event_id} updated to isMoneyTransferred: true`);
+            } catch (err) {
+              console.error(`Error updating event ${event.event_id}:`, err);
+            }
+          }, 1000); 
+        } else {
+          console.log(`No user trades found for event ${event.event_id}`);
+        }
+      } else {
+        console.log('No events to process');
+      }
+    } catch (err) {
+      console.error('Error finding event or user trades:', err);
+    }
+  }
+  let intervalId;
+app.post('/api/start-processing', (req, res) => {
+    if (!intervalId) {
+      intervalId = setInterval(checkAndProcessEvents, 1 * 60 * 1000); 
+      res.send('Started processing events every 2 minutes');
+    } else {
+      res.send('Processing is already running');
+    }
+  });
+  app.post('/api/testing-usertrades', async(req, res) => {
+   try{
+
+        const userTrades= await UserTrades.findAll();
+        console.log(userTrades);
+        res.send("done")
+   }catch(err){
+    console.log(err);
+    res.send("wrong happened");
+   }
+  });
+  app.post('/api/stop-processing', (req, res) => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+      res.send('Stopped processing events');
+    } else {
+      res.send('Processing is not running');
+    }
+  });
+  async function accessCollection(id,eventType) {
+    const uri = 'mongodb+srv://'+process.env.MONGODB_USER+':'+process.env.MONGODB_PASSWORD+"@"+process.env.MONGODB_CLUSTER+'/'+process.env.MONGODB_DBNAME+'?retryWrites=true&w=majority';
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+  
+    try {
+      // Connect to the MongoDB cluster
+      await client.connect();
+  
+      // Access the database
+      const database = client.db('cluster');
+      
+      // Access the collection
+      const collection = database.collection('usertrades');
+  
+      // Perform operations on the collection
+      const document = await collection.find({event_id:id,event_type:eventType}).toArray();
+      console.log(document);
+      return document;
+  
+    } finally {
+      // Close the connection
+      await client.close();
+    }
+  }
+  app.post("/api/mongotest",async (req,res)=>{
+    try{
+        const id="08:26PM";
+        const data = await accessCollection(id);
+        res.send(data);
+    }catch(err){
+        console.log(err);
+        res.send("something went wrong")
+    }
+  })
