@@ -124,6 +124,7 @@ app.put('/api/events', (req, res) => {
             }
             saveFinishedEvent(event, result);
         }
+        return res.status(400).json({ error: 'Cannot update event outside of active period' });
     }
 
     // Update the event with the new yes_price and no_price
