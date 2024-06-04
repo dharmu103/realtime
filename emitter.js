@@ -163,17 +163,17 @@ app.put("/api/events", (req, res) => {
 
 //youtube api
 app.post("/api/youtubeevents", async (req, res) => {
-  const { event_type, channelName } = req.body;
-
-  if (event_type !== "YOUTUBE") {
+ // const { event_type, channelName,start_time,end_time } = req.body;
+const event=req.body
+  if (event.event_type !== "YOUTUBE") {
     return res.status(400).json({ error: "Unknown event type" });
   }
 
   try {
-    const eventid = "12344334";
-    const channelDetails = await fetchYouTubeChannelDetails(channelName);
+    
+    const channelDetails = await fetchYouTubeChannelDetails(event.channelName);
     console.log(channelDetails);
-    const newEvent = await createYouTubeEvent(channelDetails, eventid);
+    const newEvent = await createYouTubeEvent(channelDetails,event);
     if (newEvent) {
       //globalYouTubeData.push(newEvent);
       //youtubeEvent.push(newEvent)

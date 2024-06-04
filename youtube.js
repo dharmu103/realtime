@@ -39,7 +39,7 @@ function getMinutes() {
     var minute = now.getMinutes();
     return minute;
 }
-async function createYouTubeEvent(channelDetails,eventid) {
+async function createYouTubeEvent(channelDetails,event) {
     try{
 
         if (
@@ -107,7 +107,7 @@ async function createYouTubeEvent(channelDetails,eventid) {
             // var start_price = message.data.p;
             // var diff_price = start_price - create_price;
     
-            if (eventid=== event_id) {
+            if (channelDetails.eventid=== event_id) {
                 // console.log("Event already exists")
                 return false;
             }
@@ -126,21 +126,21 @@ async function createYouTubeEvent(channelDetails,eventid) {
             // end_time: istEndTime,
             // current_diff_price: null,
             // diff_price: null,
-            
+            const count=channelDetails.statistics.subscriberCount+10000;
             return {event_type: 'YOUTUBE',
             event_id: event_id,
-            title: `Subscriber Count for ${channelDetails.snippet.title}`,
+            title: `Subscriber Count for ${channelDetails.snippet.title} more than ${count}`,
             subtitle: `${channelDetails.channelName} subscriber at ${event_id} was${channelDetails.statistics.subscriberCount}USDT.`,
             yes_price: 5,
             no_price: 5,
             start_price:channelDetails.statistics.subscriberCount,
             subscriber_count: channelDetails.statistics.subscriberCount,
-                is_event_active: false,
+                is_event_active: true,
                 created_time,
                 start_time_miliseconds,
                 end_time_miliseconds,
-                start_time: istStartTime,
-                end_time: istEndTime,
+                start_time: event.start_time,
+                end_time: event.end_time,
                 current_diff_price: null,
                 diff_price: null,
             };
