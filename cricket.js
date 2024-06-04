@@ -30,6 +30,7 @@ function getClockTime() {
     var dateTimeString = dateString + " " + timeString;
     return dateTimeString;
     //return timeString;
+    //hgvvfhv
 }
 
 function getMinutes() {
@@ -128,7 +129,7 @@ function create_event( event) {
             ...event,
             start_price:0,
             event_id: event_id,
-            is_event_active: false,
+            is_event_active: true,
             created_time,
             start_time_miliseconds,
             end_time_miliseconds,
