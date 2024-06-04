@@ -64,9 +64,9 @@ const emit = () => {
 
 };
 
-// setInterval(async () => {
-//    transferFunds();
-//   }, 1000);
+setInterval(async () => {
+   transferFunds();
+  }, 60000);
 
 module.exports = {
   emit,
@@ -142,9 +142,9 @@ app.put("/api/events", (req, res) => {
       event.is_event_active = false;
       let result;
       if (updatedData.score > event.score) {
-        result = "YES";
+        result = "yes";
       } else {
-        result = "NO";
+        result = "no";
       }
       saveFinishedEvent(event, result);
     }
@@ -287,7 +287,7 @@ async function checkAndProcessEvents() {
 let intervalId;
 app.post("/api/start-processing", (req, res) => {
   if (!intervalId) {
-    intervalId = setInterval(transferFunds, 1 * 60 * 1000);
+    intervalId = setInterval(checkAndProcessEvents, 1 * 60 * 1000);
     res.send("Started processing events every 2 minutes");
   } else {
     res.send("Processing is already running");
@@ -362,19 +362,18 @@ app.post("/api/mongotest", async (req, res) => {
 
 async function transferFunds() {
   try {
-    const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
+    const event = await FinishedEvent.findOneAndUpdate({ isMoneyTransferred: false }, {$set :{ isMoneyTransferred: true} });
     if (event) {
       console.log(event);
-      var userTrades =await UserTrades.find({
+      var userTrades = await UserTrades.find({
         event_id: event.event_id,
         event_type: event.event_type,
         status: "PENDING",
-      }).exec();
+      });
       if (userTrades) {
 
         console.log(userTrades);
        for (var i = 0; i < userTrades.length; i++) {
-
           if (event.result.toUpperCase() == userTrades[i].bet_type.toUpperCase()) {
             var user = await User.findOneAndUpdate({_id: userTrades[i].user_id}, {$inc: {walletBalance: userTrades[i].amount}});
           }
@@ -387,45 +386,8 @@ async function transferFunds() {
 
           });
         }
-        event.isMoneyTransferred=true;
-        await event.save();
-        if (userTrades.length > 0) {
-          console.log(`Found ${userTrades.length} user trades for event ${event.event_id}`);
-
-          setTimeout(async () => {
-              for (const trade of userTrades) {
-                  if (event.result.toUpperCase() === trade.bet_type.toUpperCase()) {
-                      console.log(`Processing trade ${trade._id}`);
-                      //trade.amount += trade.investment;
-                  }
-                 // trade.status = "SUCCESS";
-                  try {
-                      // Save the updated trade document
-                      await trade.save();
-                      console.log(`Trade ${trade._id} updated in the database`);
-                  } catch (err) {
-                      console.error(`Error updating trade ${trade._id}:`, err);
-                  }
-              }
-
-              // Mark the event as money transferred
-              //event.isMoneyTransferred = true;
-              try {
-                  await event.save();
-                  console.log(`Event ${event.event_id} updated to isMoneyTransferred: true`);
-              } catch (err) {
-                  console.error(`Error updating event ${event.event_id}:`, err);
-              }
-          }, 1000);
-        }
       }
-      else {
-        console.log(`No user trades found for event ${event.event_id}`);
     }
-    }
-    else {
-      console.log('No events to process');
-  }
   } catch (e) {
     console.log(e);
   }
