@@ -362,7 +362,7 @@ app.post("/api/mongotest", async (req, res) => {
 
 async function transferFunds() {
   try {
-    const event = await FinishedEvent.findOneAndUpdate({ isMoneyTransferred: false }, {$set :{ isMoneyTransferred: true} });
+    const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
     if (event) {
       console.log(event);
       var userTrades = await UserTrades.find({
@@ -382,10 +382,15 @@ async function transferFunds() {
           }
           userTrades[i].status = "SUCCESS";
           userTrades[i].save().then(data => {
+
             console.log("Amount Transfer Completed");
 
           });
         }
+        event.isMoneyTransferred = true;
+        event.save().then(data => {
+          console.log("Event Updated");
+        });
       }
     }
   } catch (e) {
