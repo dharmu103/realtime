@@ -92,7 +92,7 @@ async function fetchYouTubeChannelDetails(channelName) {
 app.post("/api/events", (req, res) => {
   const newEvent = req.body;
 
-  if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title) {
+  if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title||!newEvent.start_time||!newEvent.end_time) {
     return res.status(400).json({ error: "Invalid event object" });
   }
 
