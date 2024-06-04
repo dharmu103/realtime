@@ -88,8 +88,8 @@ function create_event( event) {
         var numberOfMlSeconds = currentDateObj.getTime();
         var addMlSeconds = event_duration * 60 * 1000;
         var created_time = currentDateObj.getTime();
-        var start_time_miliseconds = numberOfMlSeconds + addMlSeconds;
-        var end_time_miliseconds = numberOfMlSeconds + addMlSeconds * 2;
+        var start_time_miliseconds = event.start_time;
+        var end_time_miliseconds = event.end_time;
         var start_time = new Date(numberOfMlSeconds + addMlSeconds);
         var end_time = new Date(numberOfMlSeconds + addMlSeconds * 2);
         var istOptions = { timeZone: 'Asia/Kolkata' };

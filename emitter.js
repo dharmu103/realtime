@@ -142,9 +142,9 @@ app.put("/api/events", (req, res) => {
       event.is_event_active = false;
       let result;
       if (updatedData.score > event.score) {
-        result = "yes";
+        result = "YES";
       } else {
-        result = "no";
+        result = "NO";
       }
       saveFinishedEvent(event, result);
     }
@@ -174,17 +174,62 @@ const event=req.body
     const channelDetails = await fetchYouTubeChannelDetails(event.channelName);
     console.log(channelDetails);
     const newEvent = await createYouTubeEvent(channelDetails,event);
+    console.log(newEvent)
     if (newEvent) {
       //globalYouTubeData.push(newEvent);
       //youtubeEvent.push(newEvent)
     }
     globalYouTubeData.push(newEvent);
-    res.status(201).json(channelDetails);
+    res.status(201).json(newEvent);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
+//update youtube event
+app.put("/api/youtubeevents", (req, res) => {
+  const eventId = req.query.event_id;
+  const updatedData = req.body;
 
+  if (!eventId) {
+    return res.status(400).json({ error: "Event ID is required" });
+  }
+
+  const event = global.globalYouTubeData.find((e) => e.event_id === eventId);
+
+  if (!event) {
+    return res.status(404).json({ error: "YOTUBEEvent not found" });
+  }
+
+  const currentTime = new Date().getTime();
+
+  if (currentTime < event.start_time_miliseconds) {
+    return res
+      .status(400)
+      .json({ error: "Cannot update event outside of active period" });
+  } else if (currentTime > event.start_time_miliseconds) {
+    if ((event.is_event_active = true)) {
+      console.log("executed");
+      event.is_event_active = false;
+      let result;
+      if (updatedData.score > event.score) {
+        result = "YES";
+      } else {
+        result = "NO";
+      }
+      saveFinishedEvent(event, result);
+    }
+    return res
+      .status(400)
+      .json({ error: "Cannot update event outside of active period" });
+  }
+
+  // Update the event with the new yes_price and no_price
+  if (updatedData.yes_price) event.yes_price = updatedData.yes_price;
+  if (updatedData.no_price) event.no_price = updatedData.no_price;
+  if (updatedData.score) event.score = updatedData.score;
+  event.is_event_active = true;
+  res.status(200).json(event);
+});
 const message = {
   data: {
     p: 10,

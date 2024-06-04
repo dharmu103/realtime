@@ -75,8 +75,8 @@ async function createYouTubeEvent(channelDetails,event) {
             var numberOfMlSeconds = currentDateObj.getTime();
             var addMlSeconds = event_duration * 60 * 1000;
             var created_time = currentDateObj.getTime();
-            var start_time_miliseconds = numberOfMlSeconds + addMlSeconds;
-            var end_time_miliseconds = numberOfMlSeconds + addMlSeconds * 2;
+            var start_time_miliseconds =event.start_time;
+            var end_time_miliseconds = event.end_time;
             var start_time = new Date(numberOfMlSeconds + addMlSeconds);
             var end_time = new Date(numberOfMlSeconds + addMlSeconds * 2);
             var istOptions = { timeZone: 'Asia/Kolkata' };
@@ -184,9 +184,9 @@ async function  updateYouTubeEvent(event) {
                 event.is_event_active = false;
                 let result;
                 if(event.start_count<event.subscriber_count){
-                    result='yes';
+                    result='YES';
                 }else{
-                    result='no';
+                    result='NO';
                 }
     
                 saveFinishedEvent(element, result);
