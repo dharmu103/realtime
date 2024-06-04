@@ -30,6 +30,7 @@ function getClockTime() {
     var dateTimeString = dateString + " " + timeString;
     return dateTimeString;
     //return timeString;
+    //hgvvfhv
 }
 
 function getMinutes() {
