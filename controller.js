@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const saveFinishedEvent= require("./result");
 function getClockTime() {
     var now = new Date();
-
+    var day = now.getDate();
+    var month = now.getMonth() + 1; // Months are zero-based
+    var year = now.getFullYear();
     var hour = now.getHours();
     var minute = now.getMinutes();
     var second = now.getSeconds();
@@ -26,8 +28,11 @@ function getClockTime() {
     if (second < 10) {
         second = "0" + second;
     }
+    var dateString = `${day}/${month}/${year}`;
     var timeString = hour + ":" + minute + ap;
-    return timeString;
+    var dateTimeString = dateString + " " + timeString;
+    return dateTimeString;
+    //return timeString;
 }
 
 function getMinutes() {
@@ -77,6 +82,7 @@ function create_event(message, events,symbol) {
         var istOptions = { timeZone: 'Asia/Kolkata' };
         var istStartTime = start_time.toLocaleString('en-IN', istOptions);
         var istEndTime = end_time.toLocaleString('en-IN', istOptions);
+        var istStartDate = istStartTime.split(',')[0];
         if (start_time.getHours() < 12) {
             ampm = "AM";
         } else {
@@ -167,9 +173,9 @@ function create_event(message, events,symbol) {
                 element.is_event_active = false;
                 let result;
                 if(element.start_price<message.data.p){
-                    result='yes';
+                    result='YES';
                 }else{
-                    result='no';
+                    result='NO';
                 }
     
                 saveFinishedEvent(element, result);
