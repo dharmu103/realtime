@@ -1,6 +1,6 @@
 const express = require("express");
 const WebSocket = require("ws");
-const { create_event , update_event } = require("./controller");
+const { create_event, update_event } = require("./controller");
 const wsUrl = "wss://fstream.binance.com";
 //const symbol = "btcusdt";
 const app = express();
@@ -24,15 +24,15 @@ const runWebSocket = (symbol, events) => {
         const dateTime = new Date();
         const message = JSON.parse(data);
 
-        var obj = create_event(message, events,symbol);
-       // console.log(obj)
+        var obj = create_event(message, events, symbol);
+        // console.log(obj)
         if (obj) {
             events.push(obj);
         }
-       var updated_events = update_event(message, events);
-       if(updated_events){
-        events = updated_events;
-       }
+        var updated_events = update_event(message, events);
+        if (updated_events) {
+            events = updated_events;
+        }
         // console.log("Events:", events);
         //console.log(`${symbol} Events:`, events);
     });
@@ -52,19 +52,19 @@ const updateQuestion = function (question) {
 
 runWebSocket();
 
-function received(){
+function received() {
     runWebSocket("btcusdt", btcEvents);
     runWebSocket("ethusdt", ethEvents);
     global.btcOddsData = btcEvents;
     global.ethOddsData = ethEvents;
 
     //console.log()
-//    runWebSocket();
-//     global.oddsData = events;
+    //    runWebSocket();
+    //     global.oddsData = events;
     // console.log('received');
 
 }
 
-module.exports= {
+module.exports = {
     received
 }

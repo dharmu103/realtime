@@ -1,6 +1,6 @@
-const FinishedEvent= require("./models/result");
+const FinishedEvent = require("./models/result");
 const mongoose = require('mongoose');
-const saveFinishedEvent= require("./result");
+const saveFinishedEvent = require("./result");
 function getClockTime() {
     var now = new Date();
     var day = now.getDate();
@@ -40,17 +40,17 @@ function getMinutes() {
     var minute = now.getMinutes();
     return minute;
 }
-function create_event(message, events,symbol) {
+function create_event(message, events, symbol) {
     const dateTime = new Date().getTime();
     // console.log(getClockTime(dateTime))
     // 1 hour event
     if (
         getMinutes() % 60 === 0 ||
         getMinutes() % 20 === 0 ||
-        getMinutes() % 10 === 0||
+        getMinutes() % 10 === 0 ||
         getMinutes() % 5 === 0 ||
         getMinutes() % 2 === 0
-       
+
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -68,7 +68,7 @@ function create_event(message, events,symbol) {
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
         // var istEndTime = end_time.toLocaleString('en-IN', istOptions);
-        
+
 
         var ampm = "AM";
         var currentDateObj = new Date();
@@ -131,13 +131,13 @@ function create_event(message, events,symbol) {
             diff_price: null,
         };
         // console.log("created event")
-         //console.log(obj);
+        //console.log(obj);
         return obj;
     } else {
         // console.log(" creating event failed");
     }
 }
- function update_event(message, events) {
+function update_event(message, events) {
     const dateTime = new Date().getTime();
 
     if (!Array.isArray(events)) {
@@ -168,24 +168,24 @@ function create_event(message, events,symbol) {
         }
 
         if (dateTime > element.end_time_miliseconds) {
-            
-            if( element.is_event_active ===true){
+
+            if (element.is_event_active === true) {
                 element.is_event_active = false;
                 let result;
-                if(element.start_price<message.data.p){
-                    result='YES';
-                }else{
-                    result='NO';
+                if (element.start_price < message.data.p) {
+                    result = 'YES';
+                } else {
+                    result = 'NO';
                 }
-    
+
                 saveFinishedEvent(element, result);
             }
-           
+
             //console.log(`Event ${element.event_id} saved to the database.`);
         }
     }
 }
-module.exports = { create_event, update_event };
+module.exports = { create_event, update_event,getClockTime };
 
 // Event.aggregate([
 //     { $group: { _id: null, max_index: { $max: "$event_id" } } },

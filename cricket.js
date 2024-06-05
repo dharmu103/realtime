@@ -50,7 +50,7 @@ function getMinutes() {
 //     }
 // }
 
-function create_event( event) {
+function create_event(event) {
     //console.log(event)
     const dateTime = new Date().getTime();
     // console.log(getClockTime(dateTime))
@@ -60,7 +60,7 @@ function create_event( event) {
         // getMinutes() % 60 === 0 ||
         // getMinutes() % 20 === 0 ||
         // getMinutes() % 10 === 0||
-          getMinutes() % 1=== 0
+        getMinutes() % 1 === 0
     ) {
         var event_duration;
         if (getMinutes() % 60 === 0) {
@@ -75,13 +75,13 @@ function create_event( event) {
         // else if (getMinutes() % 2 === 0) {
         //     event_duration = 2;
         // }
-        else{
+        else {
             event_duration = 5;
         }
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
         // var istEndTime = end_time.toLocaleString('en-IN', istOptions);
-        
+
 
         var ampm = "AM";
         var currentDateObj = new Date();
@@ -127,7 +127,7 @@ function create_event( event) {
         var event_id = getClockTime();
         return {
             ...event,
-            start_price:0,
+            start_price: 0,
             event_id: event_id,
             is_event_active: true,
             created_time,
@@ -183,7 +183,7 @@ function update_event(message, events) {
     const dateTime = new Date().getTime();
     // console.log(" update event")
     // console.log("dateTime", dateTime);
-   // console.log(message);
+    // console.log(message);
     events.map((element) => {
         element.current_diff_price = element.start_price - message.data.p;
         if (element.is_event_active === false) {
@@ -223,7 +223,7 @@ function update_event(message, events) {
             //     rate_change_for_1
             // );
         }
-        if(dateTime > element.end_time_miliseconds){
+        if (dateTime > element.end_time_miliseconds) {
             element.is_event_active = true;
         }
 
