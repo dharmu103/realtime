@@ -237,7 +237,7 @@ setInterval(async () => {
   } else {
     console.log("No YouTube events to update.");
   }
-}, 10000);
+}, 5*60*10000);
 
 
 let intervalId;
