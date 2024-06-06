@@ -1,7 +1,7 @@
 const FinishedEvent = require('./models/result'); // Ensure you have the correct path to your model
 
 function saveFinishedEvent(event, result) {
-    FinishedEvent.findOne({ event_id: event.event_id ,event_type: event.event_type })
+    FinishedEvent.findOne({ event_id: event.event_id, event_type: event.event_type })
         .then((existingEvent) => {
             if (!existingEvent) {
                 let finishedEvent = new FinishedEvent({
@@ -9,7 +9,7 @@ function saveFinishedEvent(event, result) {
                     event_type: event.event_type,
                     title: event.title,
                     result: result
-                    
+
                 });
 
                 finishedEvent.save()
@@ -28,4 +28,4 @@ function saveFinishedEvent(event, result) {
         });
 }
 
-module.exports =  saveFinishedEvent ;
+module.exports = saveFinishedEvent;

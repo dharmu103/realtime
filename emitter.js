@@ -7,14 +7,13 @@ const saveFinishedEvent = require("./result");
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 const FinishedEvent = require("./models/result");
-
 const User = require("./models/user");
 const UserTrades = require("./models/user_trades");
-
 const { create_event, update_event } = require("./cricket");
 const {
   createYouTubeEvent,
   updateYouTubeEvent,
+  fetchYouTubeChannelDetails,
   getClockTime,
 } = require("./youtube");
 const path = require("path");
@@ -25,8 +24,6 @@ const path = require("path");
 const { MongoClient } = require("mongodb");
 require("dotenv/config");
 
-
-//const UserTrades= require("")
 io.on("connection", () => {
   console.log("a user connected");
 });
@@ -55,7 +52,7 @@ const emit = () => {
     events: allEvents,
   });
 
-//
+  //
 
   setTimeout(() => {
     emit();
@@ -65,54 +62,35 @@ const emit = () => {
 };
 
 setInterval(async () => {
-   transferFunds();
-  }, 60000);
+  transferFunds();
+}, 60000);
 
 module.exports = {
   emit,
 };
 
-async function fetchYouTubeChannelDetails(channelName) {
-  try {
-    //const apiKey = 'YOUR_YOUTUBE_API_KEY';
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&forUsername=${channelName}&key=${apiKey}`;
-    const response = await axios.get(url);
-    if (response.data.items.length > 0) {
-      return response.data.items[0];
-    }
-  } catch (err) {
-    console.log(err);
-    return "something wnet wrong";
-  }
-
-  //throw new Error('Channel not found');
-}
-
 //rest api
 app.post("/api/events", (req, res) => {
   const newEvent = req.body;
 
-  if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title||!newEvent.start_time||!newEvent.end_time) {
+  if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title || !newEvent.start_time || !newEvent.end_time) {
     return res.status(400).json({ error: "Invalid event object" });
   }
 
   if (newEvent.event_type === "CRICKET") {
     const processedEvent = create_event(newEvent);
     if (processedEvent) {
-      //console.log("process event"+processedEvent)
+
       events.push(processedEvent);
     }
     console.log(events);
 
-    // events.push(newEvent)
-    // const processedEvent = create_event(newEvent);
     global.cricketOddsData.push(processedEvent);
     res.status(201).json(processedEvent);
   } else {
     return res.status(400).json({ error: "Unknown event type" });
   }
 
-  //res.status(201).send("nothing happened")
 });
 
 //update cricket event
@@ -142,9 +120,9 @@ app.put("/api/events", (req, res) => {
       event.is_event_active = false;
       let result;
       if (updatedData.score > event.score) {
-        result = "yes";
+        result = "YES";
       } else {
-        result = "no";
+        result = "NO";
       }
       saveFinishedEvent(event, result);
     }
@@ -163,28 +141,73 @@ app.put("/api/events", (req, res) => {
 
 //youtube api
 app.post("/api/youtubeevents", async (req, res) => {
- // const { event_type, channelName,start_time,end_time } = req.body;
-const event=req.body
+  // const { event_type, channelName,start_time,end_time } = req.body;
+  const event = req.body
   if (event.event_type !== "YOUTUBE") {
     return res.status(400).json({ error: "Unknown event type" });
   }
 
   try {
-    
+
     const channelDetails = await fetchYouTubeChannelDetails(event.channelName);
     console.log(channelDetails);
-    const newEvent = await createYouTubeEvent(channelDetails,event);
+    const newEvent = await createYouTubeEvent(channelDetails, event);
+    console.log(newEvent)
     if (newEvent) {
       //globalYouTubeData.push(newEvent);
       //youtubeEvent.push(newEvent)
     }
     globalYouTubeData.push(newEvent);
-    res.status(201).json(channelDetails);
+    res.status(201).json(newEvent);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
+//update youtube event
+app.put("/api/youtubeevents", (req, res) => {
+  const eventId = req.query.event_id;
+  const updatedData = req.body;
 
+  if (!eventId) {
+    return res.status(400).json({ error: "Event ID is required" });
+  }
+
+  const event = global.globalYouTubeData.find((e) => e.event_id === eventId);
+
+  if (!event) {
+    return res.status(404).json({ error: "YOTUBEEvent not found" });
+  }
+
+  const currentTime = new Date().getTime();
+
+  if (currentTime < event.start_time_miliseconds) {
+    return res
+      .status(400)
+      .json({ error: "Cannot update event outside of active period" });
+  } else if (currentTime > event.start_time_miliseconds) {
+    if ((event.is_event_active = true)) {
+      console.log("executed");
+      event.is_event_active = false;
+      let result;
+      if (updatedData.score > event.score) {
+        result = "YES";
+      } else {
+        result = "NO";
+      }
+      saveFinishedEvent(event, result);
+    }
+    return res
+      .status(400)
+      .json({ error: "Cannot update event outside of active period" });
+  }
+
+  // Update the event with the new yes_price and no_price
+  if (updatedData.yes_price) event.yes_price = updatedData.yes_price;
+  if (updatedData.no_price) event.no_price = updatedData.no_price;
+  if (updatedData.score) event.score = updatedData.score;
+  event.is_event_active = true;
+  res.status(200).json(event);
+});
 const message = {
   data: {
     p: 10,
@@ -214,76 +237,9 @@ setInterval(async () => {
   } else {
     console.log("No YouTube events to update.");
   }
-}, 10000);
+}, 5*60*10000);
 
-async function checkAndProcessEvents() {
-  const uri =
-    "mongodb+srv://" +
-    process.env.MONGODB_USER +
-    ":" +
-    process.env.MONGODB_PASSWORD +
-    "@" +
-    process.env.MONGODB_CLUSTER +
-    "/" +
-    process.env.MONGODB_DBNAME +
-    "?retryWrites=true&w=majority";
-  const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  try {
-    const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
-    if (event) {
-      console.log(event);
 
-      const userTrades = await accessCollection(
-        event.event_id,
-        event.event_type
-      );
-      if (userTrades.length > 0) {
-        console.log(
-          `Found ${userTrades.length} user trades for event ${event.event_id}`
-        );
-
-        await client.connect();
-        const database = client.db("cluster");
-        const collection = database.collection("usertrades");
-        setTimeout(async () => {
-          for (const trade of userTrades) {
-            if (event.result.toUpperCase() == trade.bet_type.toUpperCase()) {
-              console.log(`Processing trade ${trade._id}`);
-              trade.amount += trade.investment;
-            }
-            trade.status = "SUCCESS";
-            try {
-              await collection.updateOne({ _id: trade._id }, { $set: trade });
-              console.log(`Trade ${trade._id} updated in the database`);
-            } catch (err) {
-              console.error(`Error updating trade ${trade._id}:`, err);
-            }
-          }
-
-          event.isMoneyTransferred = true;
-          try {
-            //await userTrades.save();
-            await event.save();
-            console.log(
-              `Event ${event.event_id} updated to isMoneyTransferred: true`
-            );
-          } catch (err) {
-            console.error(`Error updating event ${event.event_id}:`, err);
-          }
-        }, 1000);
-      } else {
-        console.log(`No user trades found for event ${event.event_id}`);
-      }
-    } else {
-      console.log("No events to process");
-    }
-  } catch (err) {
-    console.error("Error finding event or user trades:", err);
-  }
-}
 let intervalId;
 app.post("/api/start-processing", (req, res) => {
   if (!intervalId) {
@@ -312,43 +268,7 @@ app.post("/api/stop-processing", (req, res) => {
     res.send("Processing is not running");
   }
 });
-async function accessCollection(id, eventType) {
-  const uri =
-    "mongodb+srv://" +
-    process.env.MONGODB_USER +
-    ":" +
-    process.env.MONGODB_PASSWORD +
-    "@" +
-    process.env.MONGODB_CLUSTER +
-    "/" +
-    process.env.MONGODB_DBNAME +
-    "?retryWrites=true&w=majority";
-  const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
 
-  try {
-    // Connect to the MongoDB cluster
-    await client.connect();
-
-    // Access the database
-    const database = client.db("cluster");
-
-    // Access the collection
-    const collection = database.collection("usertrades");
-
-    // Perform operations on the collection
-    const document = await collection
-      .find({ event_id: id, event_type: eventType })
-      .toArray();
-    console.log(document);
-    return document;
-  } finally {
-    // Close the connection
-    await client.close();
-  }
-}
 app.post("/api/mongotest", async (req, res) => {
   try {
     const id = "08:26PM";
@@ -373,11 +293,11 @@ async function transferFunds() {
       if (userTrades) {
 
         console.log(userTrades);
-       for (var i = 0; i < userTrades.length; i++) {
+        for (var i = 0; i < userTrades.length; i++) {
           if (event.result.toUpperCase() == userTrades[i].bet_type.toUpperCase()) {
-            var user = await User.findOneAndUpdate({_id: userTrades[i].user_id}, {$inc: {walletBalance: userTrades[i].amount}});
+            var user = await User.findOneAndUpdate({ _id: userTrades[i].user_id }, { $inc: { walletBalance: userTrades[i].amount } });
           }
-          else{
+          else {
             userTrades[i].amount = 0;
           }
           userTrades[i].status = "SUCCESS";
