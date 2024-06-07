@@ -4,7 +4,7 @@ require('dotenv/config');
 const mongoose = require('./database');
 mongoose.Promise = global.Promise;
 
-global.oddsData = {};
+
 console.log("Starting the application...")
 api.received();
 emitter.emit();

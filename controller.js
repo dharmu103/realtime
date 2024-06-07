@@ -140,7 +140,15 @@ function update_event(message, events) {
     if (!Array.isArray(events)) {
         throw new Error("events should be an array");
     }
-
+    // events = events.filter((event) => {
+        
+    //     if (dateTime <= event.end_time_miliseconds) {
+    //         return true; // Keep the event
+    //     } else {
+    //         console.log("Deleting event that has ended:", event);
+    //         return false; // Remove the event
+    //     }
+    // });
     for (let element of events) {
         element.current_diff_price = element.start_price - message.data.p;
 
@@ -181,6 +189,7 @@ function update_event(message, events) {
             //console.log(`Event ${element.event_id} saved to the database.`);
         }
     }
+    return events
 }
 module.exports = { create_event, update_event,getClockTime };
 

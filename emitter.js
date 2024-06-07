@@ -38,6 +38,7 @@ let youtubeEvent = [];
 var timeout = 1000;
 const apiKey = process.env.API_KEY;
 console.log(apiKey);
+global.oddsData = {};
 //const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&forUsername=${channelName}&key=${apiKey}`;
 const emit = () => {
   // console.log(' emitting data');
@@ -49,7 +50,7 @@ const emit = () => {
     ...global.globalYouTubeData,
   ];
   io.emit("broadcast", {
-    events: allEvents,
+    oddsData: allEvents,
   });
 
   //
@@ -271,16 +272,7 @@ app.post("/api/stop-processing", (req, res) => {
   }
 });
 
-app.post("/api/mongotest", async (req, res) => {
-  try {
-    const id = "08:26PM";
-    const data = await accessCollection(id);
-    res.send(data);
-  } catch (err) {
-    console.log(err);
-    res.send("something went wrong");
-  }
-});
+
 
 async function transferFunds() {
   try {
