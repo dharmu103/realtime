@@ -15,6 +15,13 @@ function saveFinishedEvent(event, result) {
                 finishedEvent.save()
                     .then(() => {
                         console.log(`Event ${event.event_id} ${event.event_type} saved to the database.`);
+                        if (event.event_type === 'BTCUSDT') {
+                            const index = global.btcOddsData.findIndex(e => e.event_id === event.event_id);
+                            if (index !== -1) global.btcOddsData.splice(index, 1);
+                        } else if (event.event_type === 'ETHUSDT') {
+                            const index = global.ethOddsData.findIndex(e => e.event_id === event.event_id);
+                            if (index !== -1) global.ethOddsData.splice(index, 1);
+                        }
                     })
                     .catch((err) => {
                         console.error(`Failed to save event ${event.event_id}:`, err);

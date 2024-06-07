@@ -50,7 +50,7 @@ const emit = () => {
     ...global.globalYouTubeData,
   ];
   io.emit("broadcast", {
-    oddsData: allEvents,
+    events: allEvents,
   });
 
   //

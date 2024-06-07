@@ -149,6 +149,7 @@ function update_event(message, events) {
     //         return false; // Remove the event
     //     }
     // });
+    //events = events.filter(event => dateTime > event.end_time_miliseconds);
     for (let element of events) {
         element.current_diff_price = element.start_price - message.data.p;
 
