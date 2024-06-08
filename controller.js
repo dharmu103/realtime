@@ -19,17 +19,15 @@ function getClockTime() {
     if (hour == 0) {
         hour = 12;
     }
-    if (hour < 10) {
-        hour = "0" + hour;
-    }
-    if (minute < 10) {
-        minute = "0" + minute;
-    }
-    if (second < 10) {
-        second = "0" + second;
-    }
-    var dateString = `${day}/${month}/${year}`;
-    var timeString = hour + ":" + minute + ap;
+    day = day < 10 ? "0" + day : day;
+    month = month < 10 ? "0" + month : month;
+    hour = hour < 10 ? "0" + hour : hour;
+    minute = minute < 10 ? "0" + minute : minute;
+
+    var dateString = `${month}/${day}/${year}`;
+    var timeString = `${hour}:${minute}${ap}`;
+    //var dateTimeString = `${dateString} ${timeString}`;
+    
     var dateTimeString = dateString + " " + timeString;
     return dateTimeString;
     //return timeString;
@@ -48,8 +46,7 @@ function create_event(message, events, symbol) {
         getMinutes() % 60 === 0 ||
         getMinutes() % 20 === 0 ||
         getMinutes() % 10 === 0 ||
-        getMinutes() % 5 === 0 ||
-        getMinutes() % 2 === 0
+        getMinutes() % 5 === 0 
 
     ) {
         var event_duration;
@@ -62,9 +59,9 @@ function create_event(message, events, symbol) {
         } else if (getMinutes() % 5 === 0) {
             event_duration = 5;
         }
-        else if (getMinutes() % 2 === 0) {
-            event_duration = 2;
-        }
+        // else if (getMinutes() % 2 === 0) {
+        //     event_duration = 2;
+        // }
         // var istOptions = { timeZone: 'Asia/Kolkata' };
         // var istStartTime = start_time.toLocaleString('en-IN', istOptions);
         // var istEndTime = end_time.toLocaleString('en-IN', istOptions);
@@ -143,7 +140,16 @@ function update_event(message, events) {
     if (!Array.isArray(events)) {
         throw new Error("events should be an array");
     }
-
+    // events = events.filter((event) => {
+        
+    //     if (dateTime <= event.end_time_miliseconds) {
+    //         return true; // Keep the event
+    //     } else {
+    //         console.log("Deleting event that has ended:", event);
+    //         return false; // Remove the event
+    //     }
+    // });
+    //events = events.filter(event => dateTime > event.end_time_miliseconds);
     for (let element of events) {
         element.current_diff_price = element.start_price - message.data.p;
 
@@ -184,6 +190,7 @@ function update_event(message, events) {
             //console.log(`Event ${element.event_id} saved to the database.`);
         }
     }
+    return events
 }
 module.exports = { create_event, update_event,getClockTime };
 

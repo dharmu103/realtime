@@ -1,3 +1,5 @@
+const {calculateDate,parseDateTime}= require("./youtube")
+
 function getClockTime() {
     var now = new Date();
     var day = now.getDate();
@@ -180,22 +182,40 @@ function create_event(event) {
 
 function update_event(message, events) {
     console.log("update event is hitted")
-    const dateTime = new Date().getTime();
+    const dateTime = getClockTime();
+    console.log(dateTime)
+    console.log(events[0].start_time)
+    events = events.filter((event) => {
+        const allTIme =  calculateDate(event.end_time_miliseconds, event.start_time_miliseconds, dateTime);
+        const end_millisecond = allTIme.end_time;
+        
+        const current_time = allTIme.time;
+        if (current_time <= end_millisecond) {
+            return true; // Keep the event
+        } else {
+            console.log("Deleting event that has ended:", event);
+            return false; // Remove the event
+        }
+    });
     // console.log(" update event")
     // console.log("dateTime", dateTime);
     // console.log(message);
-    events.map((element) => {
+    events.forEach((event) => {
         element.current_diff_price = element.start_price - message.data.p;
+        const allTIme =  calculateDate(event.end_time_miliseconds, event.start_time_miliseconds, dateTime);
+        const end_millisecond = allTIme.end_time;
+        const start_millisecond = allTIme.start_time;
+        const current_time = allTIme.time;
         if (element.is_event_active === false) {
             if (
-                element.end_time_miliseconds < dateTime &&
-                element.start_time_miliseconds > dateTime
+                end_millisecond < current_time &&
+                start_millisecond > current_time
             ) {
                 element.is_event_active = false;
             }
             if (
-                element.end_time_miliseconds > dateTime &&
-                element.start_time_miliseconds < dateTime
+                end_millisecond > current_time &&
+                start_millisecond< current_time
             ) {
                 element.is_event_active = true;
                 if (element.diff_price === null) {
@@ -223,8 +243,8 @@ function update_event(message, events) {
             //     rate_change_for_1
             // );
         }
-        if (dateTime > element.end_time_miliseconds) {
-            element.is_event_active = true;
+        if (current_time > end_millisecond) {
+            element.is_event_active = false;
         }
 
         return events;

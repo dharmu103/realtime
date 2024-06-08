@@ -38,6 +38,7 @@ let youtubeEvent = [];
 var timeout = 1000;
 const apiKey = process.env.API_KEY;
 console.log(apiKey);
+global.oddsData = {};
 //const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&forUsername=${channelName}&key=${apiKey}`;
 const emit = () => {
   // console.log(' emitting data');
@@ -62,7 +63,7 @@ const emit = () => {
 };
 
 setInterval(async () => {
-  transferFunds();
+  await transferFunds();
 }, 60000);
 
 module.exports = {
@@ -136,6 +137,7 @@ app.put("/api/events", (req, res) => {
   if (updatedData.no_price) event.no_price = updatedData.no_price;
   if (updatedData.score) event.score = updatedData.score;
   event.is_event_active = true;
+  global.cricketOddsData = global.cricketOddsData.filter((e) => currentTime < e.end_time_miliseconds);
   res.status(200).json(event);
 });
 
@@ -234,12 +236,13 @@ setInterval(async () => {
   if (globalYouTubeData.length > 0) {
     var update_youtube = await updateYouTubeEvent(globalYouTubeData);
     console.log("YouTube events updated:", update_youtube);
+    globalYouTubeData = update_youtube;
   } else {
     console.log("No YouTube events to update.");
   }
-}, 5*60*10000);
+}, 10000);
 
-
+//5*60*10000
 let intervalId;
 app.post("/api/start-processing", (req, res) => {
   if (!intervalId) {
@@ -269,22 +272,14 @@ app.post("/api/stop-processing", (req, res) => {
   }
 });
 
-app.post("/api/mongotest", async (req, res) => {
-  try {
-    const id = "08:26PM";
-    const data = await accessCollection(id);
-    res.send(data);
-  } catch (err) {
-    console.log(err);
-    res.send("something went wrong");
-  }
-});
+
 
 async function transferFunds() {
   try {
     const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
     if (event) {
-      console.log(event);
+      console.log("event mil gaya")
+      //console.log(event);
       var userTrades = await UserTrades.find({
         event_id: event.event_id,
         event_type: event.event_type,
@@ -306,13 +301,15 @@ async function transferFunds() {
             console.log("Amount Transfer Completed");
 
           });
-        }
-        event.isMoneyTransferred = true;
+          event.isMoneyTransferred = true;
         event.save().then(data => {
           console.log("Event Updated");
         });
+        }
+        
       }
     }
+    console.log("event not found")
   } catch (e) {
     console.log(e);
   }

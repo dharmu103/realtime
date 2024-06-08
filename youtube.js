@@ -1,7 +1,7 @@
 require("dotenv").config();
 const saveFinishedEvent = require("./result");
 const axios = require("axios");
- const {getClockTime} = require("./controller");
+const { getClockTime } = require("./controller");
 // function getClockTime() {
 //     var now = new Date();
 //     var day = now.getDate();
@@ -140,23 +140,64 @@ async function createYouTubeEvent(channelDetails, event) {
 
 
 }
+function parseDateTime(dateTimeStr) {
+    const dateTimeFormat = /^(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{2})(AM|PM)$/;
+    const match = dateTimeStr.match(dateTimeFormat);
 
+    if (!match) {
+        throw new Error("Invalid date-time format");
+    }
+
+    const [, month, day, year, hour, minute, period] = match;
+    let parsedHour = parseInt(hour, 10);
+    if (period === "PM" && parsedHour !== 12) {
+        parsedHour += 12;
+    } else if (period === "AM" && parsedHour === 12) {
+        parsedHour = 0;
+    }
+
+    return new Date(year, month - 1, day, parsedHour, parseInt(minute, 10));
+}
+
+ function calculateDate(endTime, startTime, ttime) {
+    const end_time = parseDateTime(endTime);
+    const start_time = parseDateTime(startTime);
+    const time = parseDateTime(ttime);
+    return { end_time, start_time, time }
+}
 async function updateYouTubeEvent(events) {
-    const dateTime = "05/06/2024 08:20PM";
+    const dateTime = getClockTime();
     console.log(dateTime)
     console.log(events[0].start_time)
-    events.map(async(event)=>{
+    events = events.filter((event) => {
+        const allTIme =  calculateDate(event.end_time_miliseconds, event.start_time_miliseconds, dateTime);
+        const end_millisecond = allTIme.end_time;
+        
+        const current_time = allTIme.time;
+        if (current_time <= end_millisecond) {
+            return true; // Keep the event
+        } else {
+            console.log("Deleting event that has ended:", event);
+            return false; // Remove the event
+        }
+    });
+    events.forEach(async (event) => {
+        const allTIme =  calculateDate(event.end_time_miliseconds, event.start_time_miliseconds, dateTime);
+        const end_millisecond = allTIme.end_time;
+        const start_millisecond = allTIme.start_time;
+        const current_time = allTIme.time;
+        console.log(allTIme)
         if (event.is_event_active === false) {
             if (
-                event.end_time_miliseconds < dateTime &&
-                event.start_time_miliseconds > dateTime
+                end_millisecond < current_time &&
+                start_millisecond > current_time
             ) {
                 event.is_event_active = false;
                 console.log("youtube not started yet")
             }
             if (
-                event.end_time_miliseconds > dateTime &&
-                event.start_time_miliseconds < dateTime
+                end_millisecond > current_time &&
+                start_millisecond < current_time
             ) {
                 event.is_event_active = true;
                 if (event.diff_price === null) {
@@ -165,10 +206,10 @@ async function updateYouTubeEvent(events) {
                 console.log("youtube  event_active");
             }
         }
-    
-        if (event.is_event_active && dateTime > event.end_time_miliseconds) {
+
+        if (event.is_event_active && current_time > end_millisecond) {
             if (event.is_event_active === true) {
-               
+
                 event.is_event_active = false;
                 let result;
                 if (event.start_count < event.subscriber_count) {
@@ -176,11 +217,11 @@ async function updateYouTubeEvent(events) {
                 } else {
                     result = 'NO';
                 }
-    
+
                 saveFinishedEvent(event, result);
             }
         }
-        if (dateTime >= event.start_time_miliseconds && dateTime <= event.end_time_miliseconds) {
+        if (current_time >= start_millisecond && current_time <= end_millisecond) {
             event.is_event_active = true;
             console.log("youtube event hitted")
             const updatedChannelDetails = await fetchYouTubeChannelDetails(event.channelName);
@@ -188,15 +229,15 @@ async function updateYouTubeEvent(events) {
             event.yes_price = parseFloat(5 - (event.current_diff_price / 1000)).toFixed(2);
             event.no_price = parseFloat(5 + (event.current_diff_price / 1000)).toFixed(2);
             event.subscriber_count = updatedChannelDetails.statistics.subscriberCount;
-        
+
         }
         else {
             console.log("youtube event not started yet")
         }
-     
+
     })
     return events;
-   
+
 
 }
 async function fetchYouTubeChannelDetails(channelName) {
@@ -216,4 +257,4 @@ async function fetchYouTubeChannelDetails(channelName) {
 }
 
 
-module.exports = { createYouTubeEvent, updateYouTubeEvent, getClockTime, fetchYouTubeChannelDetails };
+module.exports = { createYouTubeEvent, updateYouTubeEvent, getClockTime, fetchYouTubeChannelDetails ,calculateDate,parseDateTime};
