@@ -285,9 +285,9 @@ async function transferFunds() {
         event_type: event.event_type,
         status: "PENDING",
       });
-      if (userTrades) {
+      if (userTrades.length > 0) {
 
-        console.log(userTrades);
+        console.log(userTrades.length);
         for (var i = 0; i < userTrades.length; i++) {
           if (event.result.toUpperCase() == userTrades[i].bet_type.toUpperCase()) {
             var user = await User.findOneAndUpdate({ _id: userTrades[i].user_id }, { $inc: { walletBalance: userTrades[i].amount } });
@@ -303,10 +303,14 @@ async function transferFunds() {
           });
           event.isMoneyTransferred = true;
         event.save().then(data => {
-          console.log("Event Updated");
+          console.log("Event Updated ");
         });
         }
-        
+
+      }else{
+        event.save().then(data => {
+          console.log("Event Updated Without Any Transfer ");
+        });
       }
     }
     console.log("event not found")
