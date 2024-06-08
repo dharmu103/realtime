@@ -308,6 +308,7 @@ async function transferFunds() {
         }
 
       }else{
+        event.isMoneyTransferred = true;
         event.save().then(data => {
           console.log("Event Updated Without Any Transfer ");
         });
