@@ -115,9 +115,9 @@ function create_event(message, events, symbol) {
       event_duration: event_duration,
       start_price: message.data.p,
       title: `${symbol.toUpperCase()} to be priced at ${
-        message.data.p
+        parseFloat(start_price).toFixed(2)
       } USDT or more at ${clock_end_time} ?`,
-      subtitle: `${symbol.toUpperCase()} open price at ${event_id} was ${start_price} USDT.`,
+      subtitle: `${symbol.toUpperCase()} open price at ${event_id} was ${  parseFloat(start_price).toFixed(2)} USDT.`,
       event_type: `${symbol.toUpperCase()}`,
       is_event_active: false,
       yes_price: 5,
