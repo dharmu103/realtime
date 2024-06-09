@@ -35,7 +35,7 @@ global.globalYouTubeData = [];
 let events = [];
 let youtubeEvent = [];
 // io.start()
-var timeout = 1000;
+var timeout = 2000;
 const apiKey = process.env.API_KEY;
 console.log(apiKey);
 global.oddsData = {};
@@ -58,8 +58,6 @@ const emit = () => {
   setTimeout(() => {
     emit();
   }, timeout);
-
-
 };
 
 setInterval(async () => {
@@ -74,14 +72,19 @@ module.exports = {
 app.post("/api/events", (req, res) => {
   const newEvent = req.body;
 
-  if (!newEvent.event_type || !newEvent.yes_price || !newEvent.title || !newEvent.start_time || !newEvent.end_time) {
+  if (
+    !newEvent.event_type ||
+    !newEvent.yes_price ||
+    !newEvent.title ||
+    !newEvent.start_time ||
+    !newEvent.end_time
+  ) {
     return res.status(400).json({ error: "Invalid event object" });
   }
 
   if (newEvent.event_type === "CRICKET") {
     const processedEvent = create_event(newEvent);
     if (processedEvent) {
-
       events.push(processedEvent);
     }
     console.log(events);
@@ -91,7 +94,6 @@ app.post("/api/events", (req, res) => {
   } else {
     return res.status(400).json({ error: "Unknown event type" });
   }
-
 });
 
 //update cricket event
@@ -137,24 +139,25 @@ app.put("/api/events", (req, res) => {
   if (updatedData.no_price) event.no_price = updatedData.no_price;
   if (updatedData.score) event.score = updatedData.score;
   event.is_event_active = true;
-  global.cricketOddsData = global.cricketOddsData.filter((e) => currentTime < e.end_time_miliseconds);
+  global.cricketOddsData = global.cricketOddsData.filter(
+    (e) => currentTime < e.end_time_miliseconds
+  );
   res.status(200).json(event);
 });
 
 //youtube api
 app.post("/api/youtubeevents", async (req, res) => {
   // const { event_type, channelName,start_time,end_time } = req.body;
-  const event = req.body
+  const event = req.body;
   if (event.event_type !== "YOUTUBE") {
     return res.status(400).json({ error: "Unknown event type" });
   }
 
   try {
-
     const channelDetails = await fetchYouTubeChannelDetails(event.channelName);
     console.log(channelDetails);
     const newEvent = await createYouTubeEvent(channelDetails, event);
-    console.log(newEvent)
+    console.log(newEvent);
     if (newEvent) {
       //globalYouTubeData.push(newEvent);
       //youtubeEvent.push(newEvent)
@@ -272,52 +275,54 @@ app.post("/api/stop-processing", (req, res) => {
   }
 });
 
-
-
 async function transferFunds() {
   try {
+    await FinishedEvent.find({ isMoneyTransferred: false })
+      .countDocuments()
+      .then((count) => {
+        console.log("Total docs transferred: " + count);
+      });
+
     const event = await FinishedEvent.findOne({ isMoneyTransferred: false });
     if (event) {
-      console.log("event mil gaya")
-      //console.log(event);
+      console.log("event mil gaya");
+      console.log(event.event_id);
       var userTrades = await UserTrades.find({
         event_id: event.event_id,
         event_type: event.event_type,
         status: "PENDING",
       });
       if (userTrades.length > 0) {
-
         console.log(userTrades.length);
         for (var i = 0; i < userTrades.length; i++) {
-          if (event.result.toUpperCase() == userTrades[i].bet_type.toUpperCase()) {
-            var user = await User.findOneAndUpdate({ _id: userTrades[i].user_id }, { $inc: { walletBalance: userTrades[i].amount } });
-          }
-          else {
+          if (
+            event.result.toUpperCase() == userTrades[i].bet_type.toUpperCase()
+          ) {
+            var user = await User.findOneAndUpdate(
+              { _id: userTrades[i].user_id },
+              { $inc: { walletBalance: userTrades[i].amount } }
+            );
+          } else {
             userTrades[i].amount = 0;
           }
           userTrades[i].status = "SUCCESS";
-          userTrades[i].save().then(data => {
-
+          userTrades[i].save().then((data) => {
             console.log("Amount Transfer Completed");
-
           });
           event.isMoneyTransferred = true;
-        event.save().then(data => {
-          console.log("Event Updated ");
-        });
+          event.save().then((data) => {
+            console.log("Event Updated ");
+          });
         }
-
-      }else{
+      } else {
         event.isMoneyTransferred = true;
-        event.save().then(data => {
+        event.save().then((data) => {
           console.log("Event Updated Without Any Transfer ");
         });
       }
     }
-    console.log("event not found")
+    console.log("event not found");
   } catch (e) {
     console.log(e);
   }
-
-
 }
