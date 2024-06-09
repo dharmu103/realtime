@@ -183,7 +183,12 @@ function update_event(message, events) {
       //   }
       //   element.yes_price = parseFloat(5 - rate_change).toFixed(1);
       //   element.no_price = parseFloat(5 + rate_change).toFixed(1);
-      var rate_change = element.event_duration * 10;
+
+      if(element.event_type === 'BTCUSDT'){
+        var rate_change = element.event_duration * 10;
+      }else{
+        var rate_change = element.event_duration * 2;
+      }
       var time_change =
         ((element.end_time_miliseconds - dateTime) /
           (element.end_time_miliseconds - element.created_time)) *
